@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hailey's Laptop Hero - 1st Grade Computer & MAP Test Practice</title>
+    <meta name="description" content="A playful, interactive practice app for 1st graders mastering laptop trackpad, cursor moving, double clicking, drag-and-drop, scrolling, and audio headphone listening for standardized MAP testing." />
+    
+    <!-- Google Fonts: Fredoka (Playful rounded display) & Quicksand (Legible friendly body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/src/styles/variables.css" />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+    <link rel="stylesheet" href="/src/styles/games.css" />
+    <link rel="stylesheet" href="/src/styles/simulator.css" />
+    <link rel="stylesheet" href="/src/styles/stickers.css" />
+    <link rel="stylesheet" href="/src/styles/dashboard.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- App Header -->
+      <header class="app-header no-print">
+        <div class="header-inner">
+          <div class="brand-section">
+            <div class="brand-logo">💻✨</div>
+            <div class="brand-info">
+              <h1 class="brand-title">Laptop Hero</h1>
+              <span class="brand-sub">1st Grade Computer & MAP Test Prep</span>
+            </div>
+          </div>
+
+          <div class="player-status-bar">
+            <!-- Screen / Arena Size Switcher (Tablet vs Desktop PC) -->
+            <div class="arena-size-control" id="arena-size-control" role="group" aria-label="Screen View Size">
+              <button class="btn-size-mode" id="btn-size-standard" data-size="standard" title="Standard Tablet / Laptop View (Compact Arena)">
+                📱 Standard
+              </button>
+              <button class="btn-size-mode active" id="btn-size-desktop" data-size="desktop" title="Desktop PC View (Large Play Arena)">
+                🖥️ Big PC Arena
+              </button>
+            </div>
+
+            <!-- Fullscreen Toggle -->
+            <button class="btn-fullscreen-toggle" id="btn-fullscreen-toggle" title="Toggle Fullscreen Arena">
+              ⛶ Fullscreen
+            </button>
+
+            <div class="student-pill" id="student-pill" title="Click to view stickers">
+              <span class="student-avatar" id="header-avatar">🐱</span>
+              <span class="student-name" id="header-name">Hailey</span>
+            </div>
+
+            <div class="stars-pill" id="stars-pill" title="Stars earned">
+              <span class="star-icon">⭐</span>
+              <span class="stars-count" id="header-stars">0</span>
+            </div>
+
+            <button class="audio-quick-btn" id="header-audio-toggle" title="Sound Effects & Voice Toggle">
+              🔊
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Navigation Tabs -->
+      <nav class="app-nav-bar no-print" aria-label="Main Navigation">
+        <div class="nav-links-wrapper">
+          <button class="nav-tab-btn active" data-tab="arcade" id="tab-arcade">
+            🎮 Skill Missions
+          </button>
+          <button class="nav-tab-btn" data-tab="simulator" id="tab-simulator">
+            📝 MAP Test Simulator
+          </button>
+          <button class="nav-tab-btn" data-tab="stickers" id="tab-stickers">
+            🏆 Stickers & Certificate
+          </button>
+          <button class="nav-tab-btn" data-tab="parent" id="tab-parent">
+            👨‍👩‍👧 Parent & Teacher Hub
+          </button>
+        </div>
+      </nav>
+
+      <!-- Main View Content Area -->
+      <main class="app-main-content" id="main-content">
+        <!-- Injected dynamically by main.js -->
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

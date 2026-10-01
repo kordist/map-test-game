@@ -1,0 +1,339 @@
+/* Parent & Teacher Dashboard Styles */
+
+.parent-hub-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.parent-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.parent-badge {
+  display: inline-block;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-family: var(--font-family-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  margin-bottom: 0.5rem;
+}
+
+.parent-title {
+  font-family: var(--font-family-display);
+  font-size: 2rem;
+  color: var(--color-text-main);
+  margin-bottom: 0.4rem;
+}
+
+.parent-subtitle {
+  font-size: 1.05rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* Readiness Hero Card */
+.readiness-hero-card {
+  background: #FFFFFF;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  box-shadow: var(--shadow-md);
+}
+
+.readiness-gauge {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  color: #FFFFFF;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.35);
+  flex-shrink: 0;
+}
+
+.gauge-number {
+  font-family: var(--font-family-display);
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.gauge-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  opacity: 0.9;
+  text-transform: uppercase;
+}
+
+.readiness-info {
+  flex: 1;
+}
+
+.readiness-info h3 {
+  font-family: var(--font-family-display);
+  font-size: 1.5rem;
+  color: var(--color-text-main);
+  margin-bottom: 0.25rem;
+}
+
+.readiness-info p {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.readiness-bar-track {
+  width: 100%;
+  height: 12px;
+  background: #E2E8F0;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.readiness-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3B82F6 0%, #10B981 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.readiness-tip {
+  font-size: 0.95rem;
+  color: #047857;
+  font-weight: 600;
+}
+
+/* Skills Grid */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.skill-card {
+  background: #FFFFFF;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-sm);
+}
+
+.skill-icon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.skill-icon {
+  font-size: 2.2rem;
+}
+
+.skill-status {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-full);
+}
+.status-ready {
+  background: #D1FAE5;
+  color: #047857;
+}
+.status-practice {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.skill-card h4 {
+  font-family: var(--font-family-display);
+  font-size: 1.05rem;
+  color: var(--color-text-main);
+  margin-bottom: 0.4rem;
+}
+
+.skill-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  flex: 1;
+}
+
+.skill-stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #475569;
+  border-top: 1px solid #F1F5F9;
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* Coaching Advice */
+.coaching-advice-card {
+  background: #FFFFFF;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.coaching-advice-card h3 {
+  font-family: var(--font-family-display);
+  font-size: 1.3rem;
+  color: var(--color-text-main);
+  margin-bottom: 1.25rem;
+}
+
+.tips-accordion {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.tip-item {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.tip-title {
+  font-family: var(--font-family-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.tip-body {
+  font-size: 0.9rem;
+  color: #334155;
+  line-height: 1.5;
+}
+
+/* Settings */
+.settings-panel {
+  background: #FFFFFF;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-panel h3 {
+  font-family: var(--font-family-display);
+  font-size: 1.3rem;
+  color: var(--color-text-main);
+  margin-bottom: 1.25rem;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 500px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-row label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.text-input, .select-input {
+  padding: 0.65rem 0.85rem;
+  border: 2px solid #CBD5E1;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family-body);
+  font-size: 1rem;
+  color: #1E293B;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.text-input:focus, .select-input:focus {
+  border-color: var(--color-primary);
+}
+
+.avatar-picker-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.avatar-opt-btn {
+  font-size: 1.6rem;
+  background: #F1F5F9;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.avatar-opt-btn:hover {
+  background: #E2E8F0;
+}
+
+.avatar-opt-btn.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  transform: scale(1.1);
+}
+
+.checkbox-row {
+  flex-direction: row;
+  align-items: center;
+}
+
+.checkbox-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.btn-danger {
+  background: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+.btn-danger:hover {
+  background: #FCA5A5;
+  color: #991B1B;
+}
+
+@media (max-width: 768px) {
+  .readiness-hero-card {
+    flex-direction: column;
+    text-align: center;
+  }
+}
