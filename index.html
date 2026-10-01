@@ -32,6 +32,19 @@
           </div>
 
           <div class="player-status-bar">
+            <!-- Difficulty Level Switcher (Level 1, 2, 3) -->
+            <div class="difficulty-control" id="difficulty-control" role="group" aria-label="Game Difficulty Level">
+              <button class="btn-diff-mode" id="btn-diff-1" data-diff="1" title="Level 1: Gentle speed, extra time, forgiving clicks">
+                🌱 Lvl 1
+              </button>
+              <button class="btn-diff-mode active" id="btn-diff-2" data-diff="2" title="Level 2: Standard 1st Grade MAP prep pace">
+                🌿 Lvl 2
+              </button>
+              <button class="btn-diff-mode" id="btn-diff-3" data-diff="3" title="Level 3: Turbo speed & extra challenge">
+                ⚡ Lvl 3
+              </button>
+            </div>
+
             <!-- Screen / Arena Size Switcher (Tablet vs Desktop PC) -->
             <div class="arena-size-control" id="arena-size-control" role="group" aria-label="Screen View Size">
               <button class="btn-size-mode" id="btn-size-standard" data-size="standard" title="Standard Tablet / Laptop View (Compact Arena)">

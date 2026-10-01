@@ -89,6 +89,52 @@ body {
   flex-wrap: wrap;
 }
 
+/* Difficulty Level Switcher */
+.difficulty-control {
+  display: flex;
+  background: #E2E8F0;
+  padding: 3px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid #CBD5E1;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.btn-diff-mode {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-family-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-diff-mode:hover {
+  color: var(--color-text-main);
+}
+
+.btn-diff-mode.active[data-diff="1"] {
+  background: #ECFDF5;
+  color: #047857;
+  box-shadow: 0 2px 6px rgba(4, 120, 87, 0.2);
+}
+
+.btn-diff-mode.active[data-diff="2"] {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.2);
+}
+
+.btn-diff-mode.active[data-diff="3"] {
+  background: #FFF1F2;
+  color: #BE123C;
+  box-shadow: 0 2px 6px rgba(190, 18, 60, 0.2);
+}
+
 /* Arena Size Mode Switcher */
 .arena-size-control {
   display: flex;

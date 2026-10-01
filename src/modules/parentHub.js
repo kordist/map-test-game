@@ -179,6 +179,15 @@ export class ParentHubModule {
             </div>
 
             <div class="form-row">
+              <label for="difficulty-level-select">Game Difficulty Level:</label>
+              <select id="difficulty-level-select" class="select-input">
+                <option value="1" ${st.settings.difficulty === 1 ? 'selected' : ''}>🌱 Level 1: Gentle (Slower crawler, generous click timing)</option>
+                <option value="2" ${(!st.settings.difficulty || st.settings.difficulty === 2) ? 'selected' : ''}>🌿 Level 2: Standard 1st Grade MAP Prep</option>
+                <option value="3" ${st.settings.difficulty === 3 ? 'selected' : ''}>⚡ Level 3: Turbo Challenge (Fast crawler, quick clicks)</option>
+              </select>
+            </div>
+
+            <div class="form-row">
               <label for="double-click-speed">Double-Click Sensitivity Window:</label>
               <select id="double-click-speed" class="select-input">
                 <option value="400" ${st.settings.doubleClickWindowMs === 400 ? 'selected' : ''}>Fast (400ms)</option>
@@ -220,10 +229,12 @@ export class ParentHubModule {
     saveBtn.addEventListener('click', () => {
       const name = this.container.querySelector('#student-name-input').value;
       const selectedAvatar = this.container.querySelector('.avatar-opt-btn.selected')?.dataset.avatar || '🐱';
+      const difficulty = parseInt(this.container.querySelector('#difficulty-level-select').value, 10);
       const windowMs = parseInt(this.container.querySelector('#double-click-speed').value, 10);
       const autoSpeak = this.container.querySelector('#auto-speak-toggle').checked;
 
       stateManager.updateProfile(name, selectedAvatar);
+      stateManager.setDifficulty(difficulty);
       stateManager.updateSettings({
         doubleClickWindowMs: windowMs,
         autoReadDirections: autoSpeak

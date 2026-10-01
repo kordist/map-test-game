@@ -769,6 +769,34 @@
   color: #047857;
 }
 
+.pet-dish-card.wrong-drop {
+  border-color: #EF4444;
+  background: #FEF2F2;
+  animation: dishShake 0.4s ease-in-out;
+}
+
+@keyframes dishShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px) rotate(-2deg); }
+  75% { transform: translateX(8px) rotate(2deg); }
+}
+
+.dish-rejection {
+  font-family: var(--font-family-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #DC2626;
+  padding: 0.2rem;
+  line-height: 1.2;
+}
+
+.pet-diet-hint {
+  font-size: 0.72rem;
+  color: #64748B;
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
 /* 10-Frame */
 .tenframe-game {
   width: 90%;

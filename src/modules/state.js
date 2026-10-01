@@ -32,6 +32,7 @@ const DEFAULT_STATE = {
   ],
   testHistory: [],
   settings: {
+    difficulty: 2, // 1: Gentle | 2: Standard | 3: Turbo
     doubleClickWindowMs: 550, // generous for 1st graders
     autoReadDirections: true,
     soundEffectsEnabled: true,
@@ -206,10 +207,30 @@ class StateManager {
     }
   }
 
+  setDifficulty(level) {
+    const lvl = parseInt(level, 10);
+    if ([1, 2, 3].includes(lvl)) {
+      this.state.settings.difficulty = lvl;
+      if (lvl === 1) this.state.settings.doubleClickWindowMs = 700;
+      else if (lvl === 2) this.state.settings.doubleClickWindowMs = 550;
+      else if (lvl === 3) this.state.settings.doubleClickWindowMs = 400;
+      this.save();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('difficultychange', { detail: { difficulty: lvl } }));
+      }
+    }
+  }
+
+  getDifficulty() {
+    return this.state.settings.difficulty || 2;
+  }
+
   updateSettings(newSettings) {
     this.state.settings = { ...this.state.settings, ...newSettings };
     if (newSettings.arenaSize) {
       this.setArenaSize(newSettings.arenaSize);
+    } else if (newSettings.difficulty) {
+      this.setDifficulty(newSettings.difficulty);
     } else {
       this.save();
     }

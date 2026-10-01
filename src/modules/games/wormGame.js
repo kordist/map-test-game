@@ -18,16 +18,38 @@ export class WormGame {
     this.container = containerEl;
     this.onComplete = onComplete;
     this.bumps = 0;
-    this.targetBumps = 5;
     this.wormX = 40;
     this.wormLane = 1; // 0: Top detour, 1: Main center path, 2: Bottom detour
-    this.wormSpeed = 1.15; // Kid-friendly measured crawling pace
     this.isGameStarted = false;
     this.isPaused = false;
     this.isBumping = false;
     this.isAsleep = false;
     this.animId = null;
     this.blocks = [];
+    this.applyDifficulty();
+  }
+
+  applyDifficulty() {
+    const diff = stateManager.getDifficulty();
+    if (diff === 1) {
+      // Level 1: Gentle crawl, 3 bumps to win, max 4 blocks allowed
+      this.wormSpeed = 0.8;
+      this.targetBumps = 3;
+      this.maxBlocks = 4;
+      this.levelLabel = '🌱 Level 1 (Gentle)';
+    } else if (diff === 3) {
+      // Level 3: Turbo crawl, 5 bumps to win, max 2 blocks allowed
+      this.wormSpeed = 1.7;
+      this.targetBumps = 5;
+      this.maxBlocks = 2;
+      this.levelLabel = '⚡ Level 3 (Turbo)';
+    } else {
+      // Level 2 (Default / Normal): Balanced crawl, 5 bumps, max 3 blocks
+      this.wormSpeed = 1.2;
+      this.targetBumps = 5;
+      this.maxBlocks = 3;
+      this.levelLabel = '🌿 Level 2 (Standard)';
+    }
   }
 
   render() {
@@ -36,7 +58,7 @@ export class WormGame {
         <div class="game-header">
           <div class="game-badge">🍎 Special Quest: Save the Apple!</div>
           <h2 class="game-title">Block the Hungry Worm!</h2>
-          <p class="game-desc">Place wooden blocks along the trails to bump the worm 5 times. If you block the main path, he will try a curved detour to sneak around!</p>
+          <p class="game-desc">Place wooden blocks along the trails to bump the worm ${this.targetBumps} times. If you block the main path, he will try a curved detour to sneak around!</p>
           
           <div class="game-stats">
             <div class="stat-pill">
@@ -44,17 +66,15 @@ export class WormGame {
               <span>Worm Tiredness: <strong id="worm-pct-label">0%</strong></span>
             </div>
 
-            <!-- 5-Segment Visual Worm Meter -->
+            <!-- Dynamic Segment Visual Worm Meter -->
             <div class="worm-segment-meter" id="worm-segment-meter">
               <span class="meter-label">Body Segments:</span>
               <div class="segment-dots">
-                <span class="seg-dot seg-1" id="seg-1">🟢</span>
-                <span class="seg-dot seg-2" id="seg-2">🟢</span>
-                <span class="seg-dot seg-3" id="seg-3">🟢</span>
-                <span class="seg-dot seg-4" id="seg-4">🟢</span>
-                <span class="seg-dot seg-5" id="seg-5">🟢</span>
+                ${Array.from({ length: this.targetBumps }, (_, i) => `
+                  <span class="seg-dot seg-${i + 1}" id="seg-${i + 1}">🟢</span>
+                `).join('')}
               </div>
-              <span class="meter-status-tag" id="meter-status-tag">0 / 5 Bumps</span>
+              <span class="meter-status-tag" id="meter-status-tag">${this.bumps} / ${this.targetBumps} Bumps</span>
             </div>
 
             <!-- Prominent In-Game Start / Pause Button in Header -->
@@ -140,11 +160,9 @@ export class WormGame {
             <!-- The Worm Entity -->
             <div class="worm-entity" id="worm-entity">
               <div class="worm-body-segments" id="worm-segments-wrapper">
-                <div class="worm-seg seg-tail" id="wseg-5">🟢</div>
-                <div class="worm-seg" id="wseg-4">🟢</div>
-                <div class="worm-seg" id="wseg-3">🟢</div>
-                <div class="worm-seg" id="wseg-2">🟢</div>
-                <div class="worm-seg" id="wseg-1">🟢</div>
+                ${Array.from({ length: this.targetBumps }, (_, i) => this.targetBumps - i).map(n => `
+                  <div class="worm-seg ${n === this.targetBumps ? 'seg-tail' : ''}" id="wseg-${n}">🟢</div>
+                `).join('')}
               </div>
               <div class="worm-head" id="worm-head">
                 <span class="worm-face" id="worm-face">🐛</span>
@@ -272,6 +290,18 @@ export class WormGame {
 
       this.placeBlock(dropX, lane);
     });
+
+    // Listen for live difficulty changes
+    this.onDiffChange = () => {
+      this.applyDifficulty();
+      if (!this.isGameStarted) {
+        this.render();
+      } else {
+        const statusTag = this.container.querySelector('#meter-status-tag');
+        if (statusTag) statusTag.textContent = `${this.bumps} / ${this.targetBumps} Bumps`;
+      }
+    };
+    window.addEventListener('difficultychange', this.onDiffChange);
   }
 
   initWormPosition() {
@@ -439,8 +469,8 @@ export class WormGame {
     const blocksLayer = this.container.querySelector('#placed-blocks-layer');
     if (!blocksLayer) return;
 
-    // Allow up to 3 active blocks (1 for each lane so players can defend all paths!)
-    if (this.blocks.length >= 3) {
+    // Allow active blocks based on difficulty (Lvl 1: 4, Lvl 2: 3, Lvl 3: 2)
+    if (this.blocks.length >= (this.maxBlocks || 3)) {
       const oldest = this.blocks.shift();
       if (oldest.el) oldest.el.remove();
     }
@@ -593,8 +623,9 @@ export class WormGame {
     const studentName = stateManager.get().profile.name || 'Hero';
     if (appleBubble) appleBubble.textContent = `Great block, ${studentName}! (${this.bumps}/5)`;
 
-    // Update body segments: 20% per bump
-    const pct = this.bumps * 20;
+    // Update body segments based on target bumps
+    const bumpValue = Math.round(100 / this.targetBumps);
+    const pct = Math.min(100, this.bumps * bumpValue);
     const pctLabel = this.container.querySelector('#worm-pct-label');
     if (pctLabel) pctLabel.textContent = `${pct}%`;
 
@@ -614,8 +645,8 @@ export class WormGame {
       wseg.classList.add('red-turned', 'animate-pop-in');
     }
 
-    // Spawn floating +20% badge
-    this.spawnFloatingBadge(`💥 BONK! +20% RED! (${pct}%)`);
+    // Spawn floating badge
+    this.spawnFloatingBadge(`💥 BONK! +${bumpValue}%! (${pct}%)`);
 
     // Check if 5 bumps reached (100% full red!)
     if (this.bumps >= this.targetBumps) {
@@ -758,9 +789,13 @@ export class WormGame {
   }
 
   destroy() {
+    this.isAsleep = true;
     if (this.animId) {
       cancelAnimationFrame(this.animId);
       this.animId = null;
+    }
+    if (this.onDiffChange) {
+      window.removeEventListener('difficultychange', this.onDiffChange);
     }
   }
 }

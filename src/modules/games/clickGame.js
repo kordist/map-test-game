@@ -83,6 +83,12 @@ export class ClickGame {
       }
       soundManager.speak(msg);
     });
+
+    // Listen for live difficulty changes
+    this.onDiffChange = () => {
+      this.startSubGame(this.subGame);
+    };
+    window.addEventListener('difficultychange', this.onDiffChange);
   }
 
   startSubGame(sub) {
@@ -106,10 +112,21 @@ export class ClickGame {
       scoreEl.textContent = `0 / ${this.targetScore}`;
       this.initEggCracker(arena);
     } else if (sub === 'bubbles') {
-      titleEl.textContent = 'Pop the Number Balloons!';
-      descEl.textContent = 'Single click (one tap) on each balloon in order from 1 to 6.';
+      const diff = stateManager.getDifficulty();
       coach.style.display = 'none';
-      this.targetScore = 6;
+      if (diff === 1) {
+        titleEl.textContent = 'Pop the Number Balloons (1 - 4)';
+        descEl.textContent = 'Single click (one tap) on each balloon in counting order: 1 ➔ 2 ➔ 3 ➔ 4.';
+        this.targetScore = 4;
+      } else if (diff === 3) {
+        titleEl.textContent = 'Math Challenge: Pop EVEN Balloons!';
+        descEl.textContent = 'Cognitive Challenge: Pop ONLY the EVEN numbers in order: 2 ➔ 4 ➔ 6 ➔ 8! Avoid odd numbers!';
+        this.targetScore = 4;
+      } else {
+        titleEl.textContent = 'Pop the Number Balloons (1 - 6)';
+        descEl.textContent = 'Single click (one tap) on each balloon in order from 1 to 6.';
+        this.targetScore = 6;
+      }
       scoreEl.textContent = `0 / ${this.targetScore}`;
       this.initBalloons(arena);
     } else if (sub === 'chests') {
@@ -233,20 +250,36 @@ export class ClickGame {
 
   // SUBGAME 2: BALLOONS (Single Click)
   initBalloons(arena) {
-    const colors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899'];
+    const diff = stateManager.getDifficulty();
+    const colors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
     const positions = [
       { top: '16%', left: '8%' },
-      { top: '55%', left: '22%' },
-      { top: '15%', left: '42%' },
-      { top: '58%', left: '58%' },
-      { top: '18%', left: '76%' },
-      { top: '54%', left: '88%' }
+      { top: '55%', left: '20%' },
+      { top: '15%', left: '38%' },
+      { top: '58%', left: '50%' },
+      { top: '18%', left: '65%' },
+      { top: '54%', left: '78%' },
+      { top: '22%', left: '88%' },
+      { top: '62%', left: '92%' }
     ];
+
+    let balloonNumbers = [1, 2, 3, 4, 5, 6];
+    let isEvenChallenge = false;
+    let targetList = [1, 2, 3, 4, 5, 6];
+
+    if (diff === 1) {
+      balloonNumbers = [1, 2, 3, 4];
+      targetList = [1, 2, 3, 4];
+    } else if (diff === 3) {
+      isEvenChallenge = true;
+      balloonNumbers = [1, 2, 3, 4, 5, 6, 7, 8];
+      targetList = [2, 4, 6, 8]; // Even numbers only!
+    }
 
     arena.innerHTML = `
       <div class="balloon-arena" id="balloon-arena">
-        ${[1, 2, 3, 4, 5, 6].map((num, i) => `
-          <div class="balloon-item animate-float-slow" data-num="${num}" style="--balloon-color: ${colors[num-1]}; position: absolute; top: ${positions[i].top}; left: ${positions[i].left};">
+        ${balloonNumbers.map((num, i) => `
+          <div class="balloon-item animate-float-slow" data-num="${num}" style="--balloon-color: ${colors[i % colors.length]}; position: absolute; top: ${positions[i].top}; left: ${positions[i].left};">
             <div class="balloon-body">
               <span class="balloon-num">${num}</span>
             </div>
@@ -256,31 +289,37 @@ export class ClickGame {
       </div>
     `;
 
-    let currentTarget = 1;
+    let targetIndex = 0;
     const arenaEl = arena.querySelector('#balloon-arena');
     const balloons = arenaEl.querySelectorAll('.balloon-item');
 
     balloons.forEach(balloon => {
       balloon.addEventListener('click', () => {
         const num = parseInt(balloon.dataset.num, 10);
-        if (num === currentTarget) {
-          soundManager.playPop(450 + num * 60);
+        const expected = targetList[targetIndex];
+
+        if (num === expected) {
+          soundManager.playPop(450 + num * 50);
           balloon.classList.add('popped');
-          currentTarget++;
+          targetIndex++;
           this.score++;
           const scoreEl = this.container.querySelector('#click-score');
           if (scoreEl) scoreEl.textContent = `${this.score} / ${this.targetScore}`;
 
           if (this.score >= this.targetScore) {
             setTimeout(() => {
-              this.handleSuccess('Perfect single clicking accuracy!');
+              this.handleSuccess(isEvenChallenge ? 'Mastered even number clicking!' : 'Perfect single clicking accuracy!');
             }, 400);
           }
-        } else if (num > currentTarget) {
+        } else {
           soundManager.playGentleOof();
           balloon.classList.add('shake');
           setTimeout(() => balloon.classList.remove('shake'), 400);
-          soundManager.speak(`Find number ${currentTarget} first!`);
+          if (isEvenChallenge && num % 2 !== 0) {
+            soundManager.speak(`${num} is an odd number! Pop even number ${expected} next!`);
+          } else {
+            soundManager.speak(`Find number ${expected} next!`);
+          }
         }
       });
     });
@@ -367,5 +406,8 @@ export class ClickGame {
 
   destroy() {
     if (this.clickTimer) clearTimeout(this.clickTimer);
+    if (this.onDiffChange) {
+      window.removeEventListener('difficultychange', this.onDiffChange);
+    }
   }
 }

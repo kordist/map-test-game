@@ -67,6 +67,16 @@ class App {
       });
     }
 
+    // Difficulty Level Switcher (Level 1, 2, 3)
+    const diffButtons = document.querySelectorAll('.btn-diff-mode');
+    diffButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lvl = parseInt(btn.dataset.diff, 10);
+        soundManager.playPop(lvl === 1 ? 420 : (lvl === 2 ? 540 : 680));
+        stateManager.setDifficulty(lvl);
+      });
+    });
+
     // Arena Size Switcher (Standard vs Desktop PC)
     const btnStandard = document.getElementById('btn-size-standard');
     const btnDesktop = document.getElementById('btn-size-desktop');
@@ -122,6 +132,13 @@ class App {
     const starsEl = document.getElementById('header-stars');
     const btnStandard = document.getElementById('btn-size-standard');
     const btnDesktop = document.getElementById('btn-size-desktop');
+
+    // Update Difficulty buttons
+    const curDiff = state.settings.difficulty || 2;
+    document.querySelectorAll('.btn-diff-mode').forEach(btn => {
+      const lvl = parseInt(btn.dataset.diff, 10);
+      btn.classList.toggle('active', lvl === curDiff);
+    });
 
     if (btnStandard && btnDesktop) {
       const isDesktop = (state.settings.arenaSize || 'desktop') === 'desktop';
