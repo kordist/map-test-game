@@ -543,7 +543,7 @@ export class MapTestSimulator {
             <div class="scroll-arrow-pulsing">⬇️ SCROLL DOWN TO THE BOTTOM ⬇️</div>
           </div>
           <div class="tall-filler-section">
-            <div class="mascot-cheer">🌟 Hailey, You Are a 1st Grade Computer Hero! 🌟</div>
+            <div class="mascot-cheer">🌟 ${stateManager.get().profile.name || 'Hero'}, You Are a 1st Grade Computer Hero! 🌟</div>
             <div class="art-parade">🚀 🐱 🎈 🎧 📜 🐣 🏆 🦄</div>
             <div class="art-note">Keep scrolling to reach the green completion button!</div>
           </div>

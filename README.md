@@ -1,4 +1,4 @@
-# 💻✨ Hailey's Laptop Hero
+# 💻✨ Laptop Hero
 ### 1st Grade Computer & MAP Test Practice Game
 
 A playful, interactive practice app designed for 1st graders mastering laptop trackpad, cursor navigation, double clicking, drag-and-drop, scrolling, and audio listening for standardized MAP testing.

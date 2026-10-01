@@ -1,6 +1,6 @@
 /**
  * Sticker Playground & Printable Certificate Module
- * Unlocks stickers as Hailey earns stars and generates a high-quality printable certificate.
+ * Unlocks stickers as players earn stars and generates a high-quality printable certificate.
  */
 import { soundManager } from './audio.js';
 import { stateManager } from './state.js';
@@ -163,7 +163,7 @@ export class StickerModule {
       <div class="sticker-board-layout">
         <!-- Draggable sticker drawer -->
         <div class="sticker-drawer">
-          <h4 class="drawer-title">🎒 Hailey's Sticker Pouch</h4>
+          <h4 class="drawer-title">🎒 ${st.profile.name || 'Hero'}'s Sticker Pouch</h4>
           <p class="drawer-hint">Drag unlocked stickers onto your playground!</p>
           <div class="sticker-pouch-grid">
             ${st.stickers.map(s => `
@@ -186,7 +186,7 @@ export class StickerModule {
           <div class="canvas-decor decor-sun">☀️</div>
           <div class="canvas-decor decor-castle">🏰</div>
           <div class="canvas-decor decor-rainbow">🌈</div>
-          <div class="canvas-title">✨ Hailey's Magical Sticker Meadow ✨</div>
+          <div class="canvas-title">✨ ${st.profile.name || 'Hero'}'s Magical Sticker Meadow ✨</div>
 
           <!-- Placed stickers -->
           <div class="placed-stickers-layer" id="placed-stickers-layer"></div>

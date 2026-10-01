@@ -5,7 +5,7 @@
  * Mechanics:
  * - Start Button: Game waits in ready state until player clicks "START MISSION!"
  * - Pause / Resume: Player can pause at any time.
- * - Worm crawls toward the apple. Hailey places wooden blocks in its path.
+ * - Worm crawls toward the apple. Players place wooden blocks in its path.
  * - When blocked, worm bonks, turns 20% red (1 of 5 segments), bounces back, and tries
  *   a sneaky side detour path! 5 bumps (100% red) saves the apple and tames the worm!
  */
@@ -439,7 +439,7 @@ export class WormGame {
     const blocksLayer = this.container.querySelector('#placed-blocks-layer');
     if (!blocksLayer) return;
 
-    // Allow up to 3 active blocks (1 for each lane so Hailey can defend all paths!)
+    // Allow up to 3 active blocks (1 for each lane so players can defend all paths!)
     if (this.blocks.length >= 3) {
       const oldest = this.blocks.shift();
       if (oldest.el) oldest.el.remove();
@@ -503,8 +503,9 @@ export class WormGame {
 
       if (headX > curveStartX + 60 && this.wormLane !== 1 && appleBubble) {
         if (!appleBubble.dataset.convergeWarned) {
+          const studentName = stateManager.get().profile.name || 'Hero';
           appleBubble.dataset.convergeWarned = 'true';
-          appleBubble.textContent = "The trails are merging! Block the turn, Hailey! 🚨";
+          appleBubble.textContent = `The trails are merging! Block the turn, ${studentName}! 🚨`;
           if (wormThought) wormThought.textContent = "Almost around the wall! 🍎✨";
         }
       }
@@ -547,8 +548,9 @@ export class WormGame {
     }
 
     if (this.wormLane === 1) {
+      const studentName = stateManager.get().profile.name || 'Hero';
       if (wormThought) wormThought.textContent = 'Straight for the apple! 😋';
-      if (appleBubble) appleBubble.textContent = 'Block the main road, Hailey! 🧱';
+      if (appleBubble) appleBubble.textContent = `Block the main road, ${studentName}! 🧱`;
     } else if (this.wormLane === 0) {
       if (wormThought) wormThought.textContent = 'Taking the top detour! 🌿';
       if (appleBubble) appleBubble.textContent = "He's curving down from the top! 😱";
@@ -588,7 +590,8 @@ export class WormGame {
     }
     if (wormFace) wormFace.textContent = '😵';
     if (wormThought) wormThought.textContent = 'BONK! Ouch! 💥';
-    if (appleBubble) appleBubble.textContent = `Great block, Hailey! (${this.bumps}/5)`;
+    const studentName = stateManager.get().profile.name || 'Hero';
+    if (appleBubble) appleBubble.textContent = `Great block, ${studentName}! (${this.bumps}/5)`;
 
     // Update body segments: 20% per bump
     const pct = this.bumps * 20;
@@ -713,7 +716,8 @@ export class WormGame {
     if (wormFace) wormFace.textContent = '😴';
     if (wormThought) wormThought.innerHTML = 'Zzz... 100% full & sleepy! 💤';
     if (appleAvatar) appleAvatar.textContent = '🍎👑';
-    if (appleBubble) appleBubble.textContent = 'Hooray Hailey! You saved me! 🎉';
+    const studentNameWin = stateManager.get().profile.name || 'Hero';
+    if (appleBubble) appleBubble.textContent = `Hooray ${studentNameWin}! You saved me! 🎉`;
 
     stateManager.recordSkillProgress('cursor', { stars: 3 });
 

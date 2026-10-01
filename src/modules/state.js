@@ -3,11 +3,11 @@
  * Stores progress, stars, stickers, test scores, and parent settings in LocalStorage.
  */
 
-const STORAGE_KEY = 'hailey_laptop_quest_state_v1';
+const STORAGE_KEY = 'laptop_hero_state_v1';
 
 const DEFAULT_STATE = {
   profile: {
-    name: 'Hailey',
+    name: 'Hero',
     avatar: '🐱',
     level: 1,
     stars: 0,
@@ -58,10 +58,14 @@ class StateManager {
 
   load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('hailey_laptop_quest_state_v1');
       if (raw) {
         const parsed = JSON.parse(raw);
-        return { ...DEFAULT_STATE, ...parsed };
+        const loaded = { ...DEFAULT_STATE, ...parsed };
+        if (loaded.profile && loaded.profile.name === 'Hailey') {
+          loaded.profile.name = 'Hero';
+        }
+        return loaded;
       }
     } catch (e) {
       console.warn('Could not load saved state, using defaults', e);

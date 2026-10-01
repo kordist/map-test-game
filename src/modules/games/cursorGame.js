@@ -45,7 +45,7 @@ export class CursorGame {
           <button class="btn-sound-instruction" id="cursor-speak-btn">
             <span class="icon-speaker">🔊</span> Hear Directions
           </button>
-          <div class="helper-hint">💡 <strong>Tip for Hailey:</strong> Rest your hand gently on the mouse or trackpad and slide smoothly!</div>
+          <div class="helper-hint">💡 <strong>Helpful Tip:</strong> Rest your hand gently on the mouse or trackpad and slide smoothly!</div>
         </div>
       </div>
     `;

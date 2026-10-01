@@ -49,7 +49,13 @@ class App {
     const studentPill = document.getElementById('student-pill');
     if (studentPill) {
       studentPill.addEventListener('click', () => {
-        this.navigate('stickers');
+        const cur = stateManager.get().profile.name || 'Hero';
+        const newName = prompt("What is your name, Laptop Hero? 🌟", cur);
+        if (newName && newName.trim()) {
+          stateManager.updateProfile(newName.trim(), null);
+          soundManager.playSparkle();
+          if (this.currentTab === 'arcade') this.renderArcadeLanding();
+        }
       });
     }
 
@@ -192,7 +198,7 @@ class App {
         <!-- Hero Banner -->
         <div class="arcade-hero-banner">
           <div class="hero-text-content">
-            <h1>Ready, Set, Practice, Hailey! 🌟</h1>
+            <h1>Ready, Set, Practice, ${state.profile.name || 'Hero'}! 🌟</h1>
             <p>Master the 5 computer skills for your upcoming 1st Grade MAP test through fun mini-games!</p>
           </div>
           <button class="hero-cta-btn" id="btn-hero-test">

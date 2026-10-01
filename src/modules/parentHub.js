@@ -36,7 +36,7 @@ export class ParentHubModule {
             </div>
             <p class="readiness-tip">
               ${readiness >= 80 
-                ? "🎉 Fantastic progress! Hailey has demonstrated great confidence across cursor navigation, double clicking, drag-and-drop, scrolling, and headphone listening!" 
+                ? `🎉 Fantastic progress! ${st.profile.name || 'Your student'} has demonstrated great confidence across cursor navigation, double clicking, drag-and-drop, scrolling, and headphone listening!` 
                 : "💡 Recommended: Spend 5-10 minutes each day playing through the 5 missions to build muscle memory."}
             </p>
           </div>
@@ -148,13 +148,13 @@ export class ParentHubModule {
             <div class="tip-item">
               <div class="tip-title">⚡ 3. The "Tap-Tap" Double Click Rhythm</div>
               <div class="tip-body">
-                Kids often press down and hold during double clicking, which accidentally registers as a drag. Have her practice saying "Tap-Tap" like a woodpecker.
+                Kids often press down and hold during double clicking, which accidentally registers as a drag. Have them practice saying "Tap-Tap" like a woodpecker.
               </div>
             </div>
             <div class="tip-item">
               <div class="tip-title">🎧 4. Headphone Volume & Patience</div>
               <div class="tip-body">
-                Have Hailey practice with real headphones at home. Teach her that if she didn't hear a word, she can always click the big yellow/blue 🔊 speaker button to listen again!
+                Have your child practice with real headphones at home. Teach them that if they didn't hear a word, they can always click the big yellow/blue 🔊 speaker button to listen again!
               </div>
             </div>
           </div>
