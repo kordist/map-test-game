@@ -6,6 +6,65 @@ import { soundManager } from '../audio.js';
 import { stateManager } from '../state.js';
 import confetti from 'canvas-confetti';
 
+export const WORD_BUILDER_WORDS = [
+  {
+    id: 'cat',
+    word: 'CAT',
+    emoji: '🐱',
+    clue: 'Picture: <strong>C A T</strong>',
+    hint: 'Meow! A furry feline friend!',
+    distractors: ['M', 'B', 'S', 'P']
+  },
+  {
+    id: 'dog',
+    word: 'DOG',
+    emoji: '🐶',
+    clue: 'Picture: <strong>D O G</strong>',
+    hint: 'Woof! A loyal wagging friend!',
+    distractors: ['B', 'T', 'P', 'S']
+  },
+  {
+    id: 'fish',
+    word: 'FISH',
+    emoji: '🐟',
+    clue: 'Picture: <strong>F I S H</strong>',
+    hint: 'Splash! Swims in the water with gills!',
+    distractors: ['T', 'B', 'M', 'R']
+  },
+  {
+    id: 'duck',
+    word: 'DUCK',
+    emoji: '🦆',
+    clue: 'Picture: <strong>D U C K</strong>',
+    hint: 'Quack! Swims in the pond with webbed feet!',
+    distractors: ['P', 'B', 'S', 'T']
+  },
+  {
+    id: 'frog',
+    word: 'FROG',
+    emoji: '🐸',
+    clue: 'Picture: <strong>F R O G</strong>',
+    hint: 'Ribbit! Jumps from green lily pads!',
+    distractors: ['M', 'B', 'T', 'S']
+  },
+  {
+    id: 'star',
+    word: 'STAR',
+    emoji: '⭐',
+    clue: 'Picture: <strong>S T A R</strong>',
+    hint: 'Twinkle! Shines bright in the night sky!',
+    distractors: ['B', 'P', 'M', 'D']
+  },
+  {
+    id: 'train',
+    word: 'TRAIN',
+    emoji: '🚂',
+    clue: 'Picture: <strong>T R A I N</strong>',
+    hint: 'Choo choo! Rides along the tracks!',
+    distractors: ['S', 'B', 'P', 'M']
+  }
+];
+
 export class DragGame {
   constructor(containerEl, onComplete) {
     this.container = containerEl;
@@ -14,6 +73,7 @@ export class DragGame {
     this.score = 0;
     this.targetScore = 4;
     this.draggedItem = null;
+    this.currentWordIndex = 0;
   }
 
   render() {
@@ -175,32 +235,43 @@ export class DragGame {
     }
   }
 
-  getWordData(diff) {
-    if (diff === 1) {
-      return {
-        word: 'CAT',
-        emoji: '🐱',
-        clue: 'Picture: <strong>C A T</strong>',
-        letters: ['T', 'C', 'A'],
-        voiceMsg: 'Drag the letter tiles into the boxes to spell C-A-T, cat!'
-      };
-    } else if (diff === 3) {
-      return {
-        word: 'TRAIN',
-        emoji: '🚂',
-        clue: 'Picture: <strong>T R A I N</strong>',
-        letters: ['I', 'T', 'R', 'N', 'A', 'S', 'B', 'P'],
-        voiceMsg: 'Drag the letter tiles to spell the five-letter word T-R-A-I-N, train! Watch out for extra letters!'
-      };
-    } else {
-      return {
-        word: 'FROG',
-        emoji: '🐸',
-        clue: 'Picture: <strong>F R O G</strong>',
-        letters: ['G', 'F', 'O', 'R', 'M', 'B'],
-        voiceMsg: 'Drag the letter tiles into the boxes to spell F-R-O-G, frog! Watch out for extra letters!'
-      };
+  getWordData(diff, wordIndex = null) {
+    if (wordIndex === null || wordIndex === undefined || wordIndex < 0 || wordIndex >= WORD_BUILDER_WORDS.length) {
+      if (this.currentWordIndex !== undefined && this.currentWordIndex !== null) {
+        wordIndex = this.currentWordIndex;
+      } else {
+        if (diff === 1) wordIndex = 0; // CAT
+        else if (diff === 3) wordIndex = 6; // TRAIN
+        else wordIndex = 4; // FROG
+      }
     }
+    this.currentWordIndex = wordIndex;
+    const w = WORD_BUILDER_WORDS[wordIndex];
+    const letters = [...w.word.split('')];
+
+    let extraCount = 0;
+    if (diff === 2) extraCount = 2;
+    else if (diff === 3) extraCount = 4;
+
+    if (extraCount > 0 && w.distractors) {
+      letters.push(...w.distractors.slice(0, extraCount));
+    }
+
+    const voiceMsg = diff === 1
+      ? `Drag the letter tiles into the boxes to spell ${w.word.split('').join('-')}, ${w.word.toLowerCase()}!`
+      : (diff === 2
+          ? `Drag the letter tiles to spell ${w.word.split('').join('-')}, ${w.word.toLowerCase()}! Watch out for 2 extra letters!`
+          : `Drag the letter tiles to spell the word ${w.word.split('').join('-')}, ${w.word.toLowerCase()}! Watch out for extra tricky letters!`);
+
+    return {
+      word: w.word,
+      emoji: w.emoji,
+      clue: w.clue,
+      hint: w.hint,
+      letters: letters,
+      voiceMsg: voiceMsg,
+      wordIndex: wordIndex
+    };
   }
 
   startSubGame(sub) {
@@ -231,12 +302,21 @@ export class DragGame {
       scoreEl.textContent = `0 / ${this.targetScore}`;
       this.initTenFrame(arena, data);
     } else if (sub === 'words') {
-      const data = this.getWordData(diff);
-      titleEl.textContent = `MAP Reading: Spell ${data.word}!`;
-      descEl.textContent = `Drag the letters to spell the word "${data.word}".`;
+      const data = this.getWordData(diff, this.currentWordIndex);
+      titleEl.innerHTML = `MAP Reading: Spell <strong>${data.word}</strong>! <button class="btn-skip-word" id="btn-skip-word">Next Word ➡️</button>`;
+      descEl.textContent = `Drag the letters to spell "${data.word}".`;
       this.targetScore = data.word.length;
       scoreEl.textContent = `0 / ${this.targetScore}`;
       this.initWordBuilder(arena, data);
+
+      const skipBtn = titleEl.querySelector('#btn-skip-word');
+      if (skipBtn) {
+        skipBtn.addEventListener('click', () => {
+          soundManager.playPop(480);
+          this.currentWordIndex = (this.currentWordIndex + 1) % WORD_BUILDER_WORDS.length;
+          this.startSubGame('words');
+        });
+      }
     }
   }
 
@@ -386,15 +466,24 @@ export class DragGame {
     });
   }
 
-  // SUBGAME 3: WORD BUILDER (Scales with Difficulty)
+  // SUBGAME 3: WORD BUILDER (Scales with Difficulty & Multiple Words)
   initWordBuilder(arena, data) {
     const targetWord = data.word;
     const letters = [...data.letters].sort(() => Math.random() - 0.5);
 
     arena.innerHTML = `
       <div class="word-builder-game">
+        <div class="word-picker-chips">
+          <span class="word-picker-label">Word:</span>
+          ${WORD_BUILDER_WORDS.map((w, idx) => `
+            <button class="btn-word-chip ${idx === this.currentWordIndex ? 'active' : ''}" data-index="${idx}">
+              ${w.emoji} ${w.word}
+            </button>
+          `).join('')}
+        </div>
+
         <div class="word-picture-card">
-          <div class="big-emoji">${data.emoji}</div>
+          <div class="big-emoji animate-pop-in">${data.emoji}</div>
           <div class="word-clue">${data.clue}</div>
         </div>
 
@@ -414,7 +503,22 @@ export class DragGame {
       </div>
     `;
 
+    // Chip click handler to switch words
+    arena.querySelectorAll('.btn-word-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.index, 10);
+        if (idx !== this.currentWordIndex) {
+          soundManager.playPop(520);
+          this.currentWordIndex = idx;
+          this.startSubGame('words');
+        }
+      });
+    });
+
     this.setupDragAndDrop(arena, (draggedEl, targetEl) => {
+      // Do not allow dropping on already filled slots
+      if (targetEl.classList.contains('filled')) return false;
+
       const letter = draggedEl.dataset.letter;
       const expected = targetEl.dataset.expected;
 
@@ -433,7 +537,19 @@ export class DragGame {
         if (this.score >= this.targetScore) {
           setTimeout(() => {
             soundManager.speak(`Great reading! ${targetWord.split('').join('-')} spells ${targetWord}!`);
-            this.handleSuccess(`You spelled ${targetWord} perfectly!`);
+            const nextWordIndex = (this.currentWordIndex + 1) % WORD_BUILDER_WORDS.length;
+            const nextWordObj = WORD_BUILDER_WORDS[nextWordIndex];
+            this.handleSuccess(
+              `You spelled <strong>${targetWord}</strong> ${data.emoji} perfectly!`,
+              {
+                nextWord: nextWordObj.word,
+                nextEmoji: nextWordObj.emoji,
+                onNextWord: () => {
+                  this.currentWordIndex = nextWordIndex;
+                  this.startSubGame('words');
+                }
+              }
+            );
           }, 500);
         }
         return true;
@@ -512,7 +628,7 @@ export class DragGame {
     });
   }
 
-  handleSuccess(customMsg) {
+  handleSuccess(customMsg, options = null) {
     soundManager.playFanfare();
     confetti({
       particleCount: 80,
@@ -532,22 +648,40 @@ export class DragGame {
         <p>${customMsg}</p>
         <div class="win-stars">+3 Stars Earned! ⭐⭐⭐</div>
         <div class="win-buttons">
-          <button class="btn-action btn-play-again">Practice Again</button>
-          <button class="btn-action btn-primary btn-next-mission">Next: Scrolling Adventure ➡️</button>
+          ${options?.nextWord ? `
+            <button class="btn-action btn-primary btn-next-word">
+              ➡️ Next Word: ${options.nextEmoji} ${options.nextWord}
+            </button>
+            <button class="btn-action btn-play-again">Practice Again</button>
+            <button class="btn-action btn-secondary btn-next-mission">Next Mission ➡️</button>
+          ` : `
+            <button class="btn-action btn-play-again">Practice Again</button>
+            <button class="btn-action btn-primary btn-next-mission">Next: Scrolling Adventure ➡️</button>
+          `}
         </div>
       </div>
     `;
 
     arena.appendChild(winModal);
 
+    if (options?.nextWord) {
+      winModal.querySelector('.btn-next-word').addEventListener('click', () => {
+        winModal.remove();
+        if (options.onNextWord) options.onNextWord();
+      });
+    }
+
     winModal.querySelector('.btn-play-again').addEventListener('click', () => {
       winModal.remove();
       this.startSubGame(this.subGame);
     });
 
-    winModal.querySelector('.btn-next-mission').addEventListener('click', () => {
-      if (this.onComplete) this.onComplete('scroll');
-    });
+    const nextMissionBtn = winModal.querySelector('.btn-next-mission');
+    if (nextMissionBtn) {
+      nextMissionBtn.addEventListener('click', () => {
+        if (this.onComplete) this.onComplete('scroll');
+      });
+    }
   }
 
   destroy() {
