@@ -7,6 +7,91 @@ import { soundManager } from '../audio.js';
 import { stateManager } from '../state.js';
 import confetti from 'canvas-confetti';
 
+export const PHONICS_WORD_FAMILIES = {
+  '-ing': {
+    family: '-ing',
+    soundExample: 'ring',
+    icon: '💍',
+    words: [
+      { label: 'Ring', emoji: '💍' },
+      { label: 'King', emoji: '👑' },
+      { label: 'Wing', emoji: '🪽' },
+      { label: 'Sing', emoji: '🎤' },
+      { label: 'Swing', emoji: '🛝' },
+      { label: 'Spring', emoji: '🌸' }
+    ],
+    distractors: [
+      { label: 'Cat', emoji: '🐱' },
+      { label: 'Dog', emoji: '🐶' },
+      { label: 'Sun', emoji: '☀️' },
+      { label: 'Duck', emoji: '🦆' },
+      { label: 'Bed', emoji: '🛏️' },
+      { label: 'Cup', emoji: '☕' }
+    ]
+  },
+  '-iss': {
+    family: '-iss',
+    soundExample: 'kiss',
+    icon: '💋',
+    words: [
+      { label: 'Kiss', emoji: '💋' },
+      { label: 'Miss', emoji: '🎯' },
+      { label: 'Hiss', emoji: '🐍' },
+      { label: 'Bliss', emoji: '😌' }
+    ],
+    distractors: [
+      { label: 'Cat', emoji: '🐱' },
+      { label: 'Fish', emoji: '🐟' },
+      { label: 'Sun', emoji: '☀️' },
+      { label: 'Frog', emoji: '🐸' },
+      { label: 'Duck', emoji: '🦆' },
+      { label: 'Fox', emoji: '🦊' }
+    ]
+  },
+  '-in': {
+    family: '-in',
+    soundExample: 'pin',
+    icon: '🧷',
+    words: [
+      { label: 'Pin', emoji: '🧷' },
+      { label: 'Fin', emoji: '🦈' },
+      { label: 'Spin', emoji: '🌀' },
+      { label: 'Win', emoji: '🏆' },
+      { label: 'Bin', emoji: '🗑️' },
+      { label: 'Twin', emoji: '👯' }
+    ],
+    distractors: [
+      { label: 'Cat', emoji: '🐱' },
+      { label: 'Dog', emoji: '🐶' },
+      { label: 'Sun', emoji: '☀️' },
+      { label: 'Bed', emoji: '🛏️' },
+      { label: 'Pig', emoji: '🐷' },
+      { label: 'Car', emoji: '🚗' }
+    ]
+  },
+  '-it': {
+    family: '-it',
+    soundExample: 'sit',
+    icon: '🪑',
+    words: [
+      { label: 'Sit', emoji: '🪑' },
+      { label: 'Hit', emoji: '🏏' },
+      { label: 'Fit', emoji: '👟' },
+      { label: 'Kit', emoji: '🧰' },
+      { label: 'Pit', emoji: '🕳️' },
+      { label: 'Lit', emoji: '💡' }
+    ],
+    distractors: [
+      { label: 'Cat', emoji: '🐱' },
+      { label: 'Dog', emoji: '🐶' },
+      { label: 'Sun', emoji: '☀️' },
+      { label: 'Duck', emoji: '🦆' },
+      { label: 'Cup', emoji: '☕' },
+      { label: 'Hat', emoji: '🎩' }
+    ]
+  }
+};
+
 export class MapTestSimulator {
   constructor(containerEl, onComplete) {
     this.container = containerEl;
@@ -14,22 +99,91 @@ export class MapTestSimulator {
     this.currentIndex = 0;
     this.userAnswers = {};
     this.isAudioPlaying = false;
+    this.difficulty = stateManager.getDifficulty();
+    this.currentPhonicsFamily = this.getDefaultFamilyForDiff(this.difficulty);
 
-    this.questions = [
-      {
-        id: 1,
-        subject: 'Reading / Phonics',
-        skillType: 'audio-listen',
-        spokenDirection: "Look at the pictures. Click on the picture that begins with the 'sh' sound, like in the word shoe.",
-        promptText: "Click on the picture that begins with the 'sh' sound.",
-        type: 'choice',
-        options: [
-          { id: 'opt1', label: 'Ship', emoji: '🚢', correct: true },
-          { id: 'opt2', label: 'Cat', emoji: '🐱', correct: false },
-          { id: 'opt3', label: 'Sun', emoji: '☀️', correct: false },
-          { id: 'opt4', label: 'Duck', emoji: '🦆', correct: false }
-        ]
-      },
+    this.questions = this.buildQuestionSet();
+
+    this.onDifficultyChange = (e) => {
+      const newLvl = e.detail?.difficulty || stateManager.getDifficulty();
+      if (newLvl !== this.difficulty) {
+        this.difficulty = newLvl;
+        this.questions[0] = this.buildPhonicsQuestion(this.difficulty, this.currentPhonicsFamily);
+        delete this.userAnswers[1];
+        if (this.currentIndex === 0) {
+          this.renderQuestionScreen();
+        }
+      }
+    };
+    window.addEventListener('difficultychange', this.onDifficultyChange);
+  }
+
+  getDefaultFamilyForDiff(lvl) {
+    if (lvl === 1) return '-ing';
+    if (lvl === 2) return '-in';
+    return '-it';
+  }
+
+  shuffle(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  buildPhonicsQuestion(difficulty, familyKey) {
+    const key = (familyKey && PHONICS_WORD_FAMILIES[familyKey]) ? familyKey : this.getDefaultFamilyForDiff(difficulty);
+    const family = PHONICS_WORD_FAMILIES[key];
+    const count = Math.min(3, Math.max(1, difficulty));
+
+    // Shuffle words and pick 'count' correct options
+    const shuffledWords = this.shuffle(family.words);
+    const correctItems = shuffledWords.slice(0, count).map((w, idx) => ({
+      id: `opt_corr_${idx}`,
+      label: w.label,
+      emoji: w.emoji,
+      correct: true,
+      ending: family.family
+    }));
+
+    // Distractor count: Level 1 has 3 distractors (4 total), Level 2 has 4 distractors (6 total), Level 3 has 3 distractors (6 total)
+    const distractorCount = count === 1 ? 3 : (count === 2 ? 4 : 3);
+    const shuffledDistractors = this.shuffle(family.distractors);
+    const distractorItems = shuffledDistractors.slice(0, distractorCount).map((d, idx) => ({
+      id: `opt_dist_${idx}`,
+      label: d.label,
+      emoji: d.emoji,
+      correct: false,
+      ending: ''
+    }));
+
+    const allOptions = this.shuffle([...correctItems, ...distractorItems]);
+
+    return {
+      id: 1,
+      subject: 'Reading / Phonics',
+      skillType: 'audio-listen',
+      phonicsChallenge: true,
+      endingFamily: family.family,
+      soundExample: family.soundExample,
+      requiredCount: count,
+      isMultiSelect: count > 1,
+      spokenDirection: count === 1
+        ? `Look at the pictures and words. Click on 1 word that ends with the '${family.family}' sound, like in the word ${family.soundExample}.`
+        : `Look at the pictures and words. Click on the ${count} words that end with the '${family.family}' sound, like in the word ${family.soundExample}.`,
+      promptText: count === 1
+        ? `Click on 1 word that ends with '${family.family}'.`
+        : `Click on the ${count} words that end with '${family.family}'.`,
+      type: 'choice',
+      options: allOptions
+    };
+  }
+
+  buildQuestionSet() {
+    return [
+      this.buildPhonicsQuestion(this.difficulty, this.currentPhonicsFamily),
       {
         id: 2,
         subject: 'Math / Counting',
@@ -127,6 +281,8 @@ export class MapTestSimulator {
   render() {
     this.currentIndex = 0;
     this.userAnswers = {};
+    this.difficulty = stateManager.getDifficulty();
+    this.questions = this.buildQuestionSet();
     this.renderQuestionScreen();
   }
 
@@ -255,31 +411,196 @@ export class MapTestSimulator {
 
     // TYPE 1: STANDARD MULTIPLE CHOICE / PHONICS
     if (q.type === 'choice') {
+      const isMulti = q.isMultiSelect || (q.requiredCount && q.requiredCount > 1);
+      const requiredCount = q.requiredCount || 1;
+
+      let selectedIds = [];
+      if (Array.isArray(this.userAnswers[q.id])) {
+        selectedIds = this.userAnswers[q.id];
+      } else if (this.userAnswers[q.id]) {
+        selectedIds = [this.userAnswers[q.id]];
+      }
+
+      const getHint = (selCount) => {
+        if (selCount === 0) {
+          return requiredCount === 1
+            ? `Click 1 word ending in <strong>${q.endingFamily || ''}</strong>`
+            : `Click <strong>${requiredCount}</strong> words ending in <strong>${q.endingFamily || ''}</strong>`;
+        }
+        if (selCount < requiredCount) {
+          const left = requiredCount - selCount;
+          return `Nice! Pick <strong>${left} more</strong> word${left > 1 ? 's' : ''}`;
+        }
+        return `🎉 Perfect! Click <strong>Next ➡️</strong> to continue`;
+      };
+
       body.innerHTML = `
         <div class="map-choice-view">
+          ${q.phonicsChallenge ? `
+            <div class="phonics-challenge-bar">
+              <div class="phonics-family-chips">
+                <span class="phonics-chip-label">Ending Sound:</span>
+                ${Object.keys(PHONICS_WORD_FAMILIES).map(fKey => {
+                  const fam = PHONICS_WORD_FAMILIES[fKey];
+                  const isActive = fam.family === q.endingFamily;
+                  return `
+                    <button class="btn-phonics-pill ${isActive ? 'active' : ''}" data-family="${fam.family}">
+                      ${fam.family} ${fam.icon}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+              <div class="phonics-goal-badge">
+                Level ${this.difficulty}: Select <strong>${requiredCount}</strong> word${requiredCount > 1 ? 's' : ''}
+              </div>
+            </div>
+          ` : ''}
+
           <h3 class="map-prompt-text">${q.promptText}</h3>
-          <div class="map-options-grid">
-            ${q.options.map(opt => `
-              <button class="map-option-card ${this.userAnswers[q.id] === opt.id ? 'selected' : ''}" data-id="${opt.id}" data-correct="${opt.correct}">
-                <div class="opt-media">${opt.emoji}</div>
-                <div class="opt-label">${opt.label}</div>
-              </button>
-            `).join('')}
+
+          ${isMulti ? `
+            <div class="multi-select-status" id="multi-select-status">
+              <span class="status-counter-badge ${selectedIds.length === requiredCount ? 'complete' : ''}" id="status-counter-badge">
+                Selected: <strong>${selectedIds.length}</strong> / <strong>${requiredCount}</strong>
+              </span>
+              <span class="status-hint-text" id="status-hint-text">
+                ${getHint(selectedIds.length)}
+              </span>
+            </div>
+          ` : ''}
+
+          <div class="map-options-grid ${q.options.length > 4 ? 'grid-3-col' : ''}">
+            ${q.options.map(opt => {
+              const isSelected = selectedIds.includes(opt.id);
+              return `
+                <button class="map-option-card ${isSelected ? 'selected' : ''}" data-id="${opt.id}" data-correct="${opt.correct}">
+                  <div class="opt-check-bubble ${isSelected ? 'checked' : ''}">
+                    ${isSelected ? '✓' : ''}
+                  </div>
+                  <div class="opt-media">${opt.emoji}</div>
+                  <div class="opt-label">${opt.label}</div>
+                </button>
+              `;
+            }).join('')}
           </div>
         </div>
       `;
 
-      body.querySelectorAll('.map-option-card').forEach(card => {
+      // Phonics Family Pills click handler
+      if (q.phonicsChallenge) {
+        body.querySelectorAll('.btn-phonics-pill').forEach(pill => {
+          pill.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const targetFamily = pill.dataset.family;
+            if (targetFamily !== q.endingFamily) {
+              soundManager.playPop(520);
+              this.currentPhonicsFamily = targetFamily;
+              this.questions[0] = this.buildPhonicsQuestion(this.difficulty, targetFamily);
+              delete this.userAnswers[1];
+              this.renderQuestionScreen();
+            }
+          });
+        });
+      }
+
+      // Option cards click handlers
+      const cards = body.querySelectorAll('.map-option-card');
+      cards.forEach(card => {
         card.addEventListener('click', () => {
-          body.querySelectorAll('.map-option-card').forEach(c => c.classList.remove('selected'));
-          card.classList.add('selected');
-          soundManager.playPop(520);
-          this.userAnswers[q.id] = card.dataset.id;
-          nextBtn.disabled = false;
-          nextBtn.classList.add('animate-pulse-subtle');
+          const cardId = card.dataset.id;
+
+          if (!isMulti) {
+            // Single choice (Level 1)
+            cards.forEach(c => {
+              c.classList.remove('selected');
+              const bubble = c.querySelector('.opt-check-bubble');
+              if (bubble) {
+                bubble.classList.remove('checked');
+                bubble.textContent = '';
+              }
+            });
+            card.classList.add('selected');
+            const bubble = card.querySelector('.opt-check-bubble');
+            if (bubble) {
+              bubble.classList.add('checked');
+              bubble.textContent = '✓';
+            }
+            soundManager.playPop(540);
+            this.userAnswers[q.id] = [cardId];
+            nextBtn.disabled = false;
+            nextBtn.classList.add('animate-pulse-subtle');
+            return;
+          }
+
+          // Multi-choice (Level 2 or 3)
+          let currentList = Array.isArray(this.userAnswers[q.id]) ? [...this.userAnswers[q.id]] : [];
+          const idx = currentList.indexOf(cardId);
+
+          if (idx !== -1) {
+            // Unselect card
+            currentList.splice(idx, 1);
+            card.classList.remove('selected');
+            const bubble = card.querySelector('.opt-check-bubble');
+            if (bubble) {
+              bubble.classList.remove('checked');
+              bubble.textContent = '';
+            }
+            soundManager.playClick();
+          } else {
+            // Trying to select card
+            if (currentList.length < requiredCount) {
+              currentList.push(cardId);
+              card.classList.add('selected');
+              const bubble = card.querySelector('.opt-check-bubble');
+              if (bubble) {
+                bubble.classList.add('checked');
+                bubble.textContent = '✓';
+              }
+              soundManager.playPop(500 + currentList.length * 70);
+            } else {
+              // Already at max
+              soundManager.playBoop?.() || soundManager.playPop(300);
+              const badge = body.querySelector('#status-counter-badge');
+              if (badge) {
+                badge.classList.add('animate-shake');
+                setTimeout(() => badge.classList.remove('animate-shake'), 400);
+              }
+              const hint = body.querySelector('#status-hint-text');
+              if (hint) {
+                hint.innerHTML = `⚠️ You chose ${requiredCount} words! Tap a chosen word to change it.`;
+              }
+              return;
+            }
+          }
+
+          this.userAnswers[q.id] = currentList;
+
+          // Update Counter and Hint
+          const badge = body.querySelector('#status-counter-badge');
+          const hint = body.querySelector('#status-hint-text');
+          if (badge) {
+            badge.innerHTML = `Selected: <strong>${currentList.length}</strong> / <strong>${requiredCount}</strong>`;
+            badge.classList.toggle('complete', currentList.length === requiredCount);
+          }
+          if (hint) {
+            hint.innerHTML = getHint(currentList.length);
+          }
+
+          // Update Next Button
+          const isComplete = currentList.length === requiredCount;
+          nextBtn.disabled = !isComplete;
+          if (isComplete) {
+            nextBtn.classList.add('animate-pulse-subtle');
+          } else {
+            nextBtn.classList.remove('animate-pulse-subtle');
+          }
         });
       });
-      if (this.userAnswers[q.id]) nextBtn.disabled = false;
+
+      // Restore Next button state if already completed
+      const completed = selectedIds.length === requiredCount;
+      nextBtn.disabled = !completed;
+      if (completed) nextBtn.classList.add('animate-pulse-subtle');
     }
 
     // TYPE 2: DRAG AND COUNT INTO BOX (10-FRAME / BUCKET)
@@ -584,8 +905,16 @@ export class MapTestSimulator {
     this.questions.forEach(q => {
       const ans = this.userAnswers[q.id];
       if (q.type === 'choice' && ans) {
-        const opt = q.options.find(o => o.id === ans);
-        if (opt && opt.correct) correctCount++;
+        if (q.isMultiSelect || Array.isArray(ans)) {
+          const selected = Array.isArray(ans) ? ans : [ans];
+          const correctIds = q.options.filter(o => o.correct).map(o => o.id);
+          const isCorrect = selected.length === correctIds.length &&
+            selected.every(id => correctIds.includes(id));
+          if (isCorrect) correctCount++;
+        } else {
+          const opt = q.options.find(o => o.id === ans);
+          if (opt && opt.correct) correctCount++;
+        }
       } else if (q.type === 'drag-count' && ans === true) {
         correctCount++;
       } else if (q.type === 'math-domino' && ans) {
@@ -666,5 +995,8 @@ export class MapTestSimulator {
 
   destroy() {
     soundManager.stopSpeech();
+    if (this.onDifficultyChange) {
+      window.removeEventListener('difficultychange', this.onDifficultyChange);
+    }
   }
 }
