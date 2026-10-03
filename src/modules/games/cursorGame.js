@@ -69,12 +69,19 @@ export class CursorGame {
       if (this.subGame === 'stars') {
         msg = "Move your cursor with the trackpad or mouse to touch each glowing star!";
       } else if (this.subGame === 'path') {
-        msg = "Guide the bunny by moving your mouse carefully along the path to reach the carrot!";
+        msg = "Touch Bunny and guide her smoothly along the path to collect all the juicy carrots for the picnic!";
       } else {
         msg = "Move your flashlight around the dark ocean to discover all four hidden sea creatures!";
       }
       soundManager.speak(msg);
     });
+
+    this.difficultyHandler = () => {
+      if (this.subGame === 'path') {
+        this.startSubGame('path');
+      }
+    };
+    window.addEventListener('difficultychange', this.difficultyHandler);
   }
 
   startSubGame(sub) {
@@ -99,11 +106,21 @@ export class CursorGame {
       scoreEl.textContent = `0 / ${this.targetScore}`;
       this.initStarCatcher(arena);
     } else if (sub === 'path') {
-      titleEl.textContent = 'Bunny\'s Winding Path!';
-      descEl.textContent = 'Keep your cursor inside the sunny green path all the way from Bunny to the Carrot!';
-      this.targetScore = 1;
-      scoreEl.textContent = `0 / 1`;
-      this.initWindingPath(arena);
+      const diff = stateManager.getDifficulty();
+      let targetCarrots = 4;
+      let levelTag = 'Level 2 (Standard)';
+      if (diff === 1) {
+        targetCarrots = 3;
+        levelTag = 'Level 1 (Gentle)';
+      } else if (diff === 3) {
+        targetCarrots = 5;
+        levelTag = 'Level 3 (Turbo)';
+      }
+      this.targetScore = targetCarrots;
+      titleEl.innerHTML = `🐰 Bunny's Meadow Trail <span class="path-level-tag">${levelTag}</span>`;
+      descEl.textContent = `Guide 🐰 Bunny along the golden path to munch all ${targetCarrots} carrots on the way to the picnic!`;
+      scoreEl.textContent = `0 / ${targetCarrots} 🥕`;
+      this.initWindingPath(arena, targetCarrots);
     } else if (sub === 'flashlight') {
       titleEl.textContent = 'Deep Ocean Flashlight!';
       descEl.textContent = 'Move your flashlight around to find 4 hidden sea animals!';
@@ -183,39 +200,90 @@ export class CursorGame {
   }
 
   // SUBGAME 2: WINDING PATH (Bunny physically follows the cursor!)
-  initWindingPath(arena) {
+  initWindingPath(arena, targetCarrots = 4) {
+    // Generate smooth sine-wave coordinates for SVG path
+    const points = [];
+    for (let i = 0; i <= 60; i++) {
+      const t = i / 60;
+      const x = 50 + t * 900;
+      const y = 200 - 125 * Math.sin(2 * Math.PI * t);
+      points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+    }
+    const pathData = 'M ' + points.join(' L ');
+
+    // Calculate carrot waypoint positions along the road
+    let tFractions = [0.20, 0.40, 0.60, 0.80];
+    if (targetCarrots === 3) {
+      tFractions = [0.25, 0.50, 0.75];
+    } else if (targetCarrots === 5) {
+      tFractions = [0.15, 0.32, 0.50, 0.68, 0.85];
+    }
+
+    const carrotsHtml = tFractions.map((t, idx) => {
+      const xPct = ((50 + t * 900) / 1000) * 100;
+      const yPct = ((200 - 125 * Math.sin(2 * Math.PI * t)) / 400) * 100;
+      return `
+        <div class="waypoint-carrot" id="carrot-wp-${idx}" style="left: ${xPct.toFixed(2)}%; top: ${yPct.toFixed(2)}%;" data-eaten="false">
+          <span class="carrot-item-icon">🥕</span>
+        </div>
+      `;
+    }).join('');
+
     arena.innerHTML = `
       <div class="path-challenge-container" id="path-container">
-        <svg class="path-svg" id="path-svg-el" viewBox="0 0 800 400" preserveAspectRatio="none">
+        <!-- Meadow Scenery Layer -->
+        <div class="meadow-scenery">
+          <div class="scenery-sun" title="Warm Sunshine">☀️</div>
+          <div class="scenery-cloud cloud-1">☁️</div>
+          <div class="scenery-cloud cloud-2">⛅</div>
+          
+          <div class="scenery-tree" style="top: 10%; left: 3%;">🌳</div>
+          <div class="scenery-tree" style="bottom: 8%; left: 14%;">🌲</div>
+          <div class="scenery-tree" style="top: 10%; right: 14%;">🌳</div>
+          <div class="scenery-tree" style="bottom: 10%; right: 4%;">🌲</div>
+          
+          <div class="scenery-flower" style="top: 60%; left: 6%;">🌸</div>
+          <div class="scenery-flower" style="bottom: 18%; left: 44%;">🌻</div>
+          <div class="scenery-flower" style="top: 12%; left: 52%;">🌷</div>
+          <div class="scenery-flower" style="bottom: 24%; right: 28%;">🌼</div>
+          
+          <div class="scenery-butterfly">🦋</div>
+        </div>
+
+        <!-- SVG Golden Road with border, gradient surface, and stepping stones -->
+        <svg class="path-svg" id="path-svg-el" viewBox="0 0 1000 400" preserveAspectRatio="none">
           <defs>
-            <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id="roadSurfaceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stop-color="#34D399" />
               <stop offset="50%" stop-color="#10B981" />
               <stop offset="100%" stop-color="#059669" />
             </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
+            <filter id="roadShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#047857" flood-opacity="0.25"/>
             </filter>
           </defs>
-          <!-- Background wide safe road (70px wide for kid-friendly tolerance) -->
-          <path id="guide-path-bg" class="interactive-path" d="M 60 200 C 180 80, 240 320, 400 200 C 560 80, 620 320, 740 200" 
-                fill="none" stroke="#D1FAE5" stroke-width="74" stroke-linecap="round" stroke-linejoin="round" />
-          <path id="guide-path" class="interactive-path" d="M 60 200 C 180 80, 240 320, 400 200 C 560 80, 620 320, 740 200" 
-                fill="none" stroke="url(#pathGradient)" stroke-width="46" stroke-linecap="round" stroke-linejoin="round" />
-          <!-- Center dashed lane -->
-          <path class="interactive-path" d="M 60 200 C 180 80, 240 320, 400 200 C 560 80, 620 320, 740 200" 
-                fill="none" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="10, 10" stroke-linecap="round" />
+          <!-- Sandy Road Border -->
+          <path class="interactive-path" d="${pathData}" 
+                fill="none" stroke="#FDE68A" stroke-width="84" stroke-linecap="round" stroke-linejoin="round" filter="url(#roadShadow)" />
+          <!-- Lush Green Path Surface -->
+          <path id="guide-path" class="interactive-path" d="${pathData}" 
+                fill="none" stroke="url(#roadSurfaceGrad)" stroke-width="62" stroke-linecap="round" stroke-linejoin="round" />
+          <!-- Stepping Stone dashed center line -->
+          <path class="interactive-path" d="${pathData}" 
+                fill="none" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="14, 14" stroke-linecap="round" opacity="0.9" />
         </svg>
+
+        <!-- Waypoint Carrots along the trail -->
+        <div class="trail-carrots-layer" id="trail-carrots">
+          ${carrotsHtml}
+        </div>
 
         <!-- Paw prints layer -->
         <div class="paw-prints-layer" id="paw-layer"></div>
 
         <!-- Start Marker -->
         <div class="path-start-marker" id="path-start">
+          <span>🐰</span>
           <span class="marker-title">START</span>
         </div>
 
@@ -225,14 +293,14 @@ export class CursorGame {
           <div class="bunny-bubble" id="bunny-bubble">Touch me to walk!</div>
         </div>
 
-        <!-- Finish Carrot Marker -->
-        <div class="path-end-marker" id="path-end" title="Target!">
-          <span class="carrot-icon animate-pulse-subtle">🥕</span>
-          <span class="marker-title">FINISH</span>
+        <!-- Finish Picnic Basket Marker -->
+        <div class="path-end-marker" id="path-end" title="Picnic Feast!">
+          <span class="carrot-icon animate-pulse-subtle">🧺</span>
+          <span class="marker-title">PICNIC!</span>
         </div>
 
         <div class="path-status" id="path-status">
-          👉 Touch 🐰 <strong>Bunny</strong> to guide her to the 🥕 <strong>Carrot</strong>!
+          👉 Touch 🐰 <strong>Bunny</strong> to start munching carrots along the trail!
         </div>
       </div>
     `;
@@ -240,43 +308,70 @@ export class CursorGame {
     const container = arena.querySelector('#path-container');
     const bunny = arena.querySelector('#guided-bunny');
     const bubble = arena.querySelector('#bunny-bubble');
+    const startBtn = arena.querySelector('#path-start');
     const endBtn = arena.querySelector('#path-end');
     const status = arena.querySelector('#path-status');
     const pawLayer = arena.querySelector('#paw-layer');
+    const carrotsContainer = arena.querySelector('#trail-carrots');
+    const carrotEls = Array.from(carrotsContainer.querySelectorAll('.waypoint-carrot'));
 
     let isGuiding = false;
     let completed = false;
+    let eatenCarrots = 0;
     let lastPawX = 0, lastPawY = 0;
     let offPathTimeout = null;
 
-    // Position bunny initially at the start
+    // Road tolerance based on difficulty
+    const diff = stateManager.getDifficulty();
+    const roadTolerance = diff === 1 ? 70 : (diff === 3 ? 50 : 60);
+
     const resetBunnyToStart = () => {
-      bunny.style.left = '60px';
+      bunny.style.left = '45px';
       bunny.style.top = '50%';
-      bunny.classList.remove('walking', 'hopping');
+      bunny.classList.remove('walking', 'hopping', 'off-track');
       bubble.textContent = 'Touch me to walk!';
       bubble.style.display = 'block';
+      if (offPathTimeout) {
+        clearTimeout(offPathTimeout);
+        offPathTimeout = null;
+      }
     };
     resetBunnyToStart();
+
+    const resetCarrots = () => {
+      eatenCarrots = 0;
+      this.score = 0;
+      carrotEls.forEach(c => {
+        c.dataset.eaten = 'false';
+        c.classList.remove('eaten');
+      });
+      pawLayer.innerHTML = '';
+      const scoreEl = this.container.querySelector('#cursor-score');
+      if (scoreEl) scoreEl.textContent = `0 / ${targetCarrots} 🥕`;
+      endBtn.classList.remove('animate-bounce');
+    };
 
     const startGuiding = () => {
       if (completed) return;
       isGuiding = true;
       bunny.classList.add('walking');
-      bubble.textContent = 'Follow the green path!';
+      bubble.textContent = eatenCarrots < targetCarrots ? 'Munch the carrots! 🥕' : 'To the picnic! 🧺';
       bubble.style.display = 'block';
-      status.innerHTML = '✨ Great! Guide the bunny along the green path all the way to 🥕!';
+      status.innerHTML = `✨ Guide Bunny along the trail! (${eatenCarrots}/${targetCarrots} Carrots eaten)`;
       status.className = 'path-status tracking-active';
       soundManager.playPop(440);
     };
 
     bunny.addEventListener('pointerenter', startGuiding);
     bunny.addEventListener('pointerdown', startGuiding);
+    startBtn.addEventListener('pointerdown', startGuiding);
 
     container.addEventListener('pointermove', (e) => {
       if (!isGuiding || completed) return;
 
       const rect = container.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
@@ -284,17 +379,26 @@ export class CursorGame {
       bunny.style.left = `${mouseX}px`;
       bunny.style.top = `${mouseY}px`;
 
-      // Check if cursor is over the green path or start/end
-      const target = document.elementFromPoint(e.clientX, e.clientY);
-      const isOnPath = target && (
-        target.classList.contains('interactive-path') ||
-        target.id === 'guide-path-bg' ||
-        target.id === 'guide-path' ||
-        target.closest('#guided-bunny') ||
-        target.closest('#path-start') ||
-        target.closest('#path-end') ||
-        target.closest('#paw-layer')
-      );
+      // Normalized coordinates in viewBox (0..1000, 0..400)
+      const vx = (mouseX / rect.width) * 1000;
+      const vy = (mouseY / rect.height) * 400;
+
+      // Mathematical check: is cursor within roadTolerance of the golden path?
+      let isOnPath = false;
+      if (vx < 70) {
+        // Safe start zone
+        isOnPath = true;
+      } else if (vx > 930) {
+        // Safe finish zone
+        isOnPath = true;
+      } else {
+        const t = (vx - 50) / 900;
+        const idealVy = 200 - 125 * Math.sin(2 * Math.PI * t);
+        const distY = Math.abs(vy - idealVy);
+        if (distY <= roadTolerance) {
+          isOnPath = true;
+        }
+      }
 
       if (isOnPath) {
         if (offPathTimeout) {
@@ -302,62 +406,109 @@ export class CursorGame {
           offPathTimeout = null;
         }
         bunny.classList.remove('off-track');
-        bubble.textContent = 'Yum, carrot ahead! 🥕';
 
         // Drop paw print if moved enough distance
         const dist = Math.hypot(mouseX - lastPawX, mouseY - lastPawY);
-        if (dist > 35 && mouseX > 70 && mouseX < rect.width - 70) {
+        if (dist > 35 && mouseX > 60 && mouseX < rect.width - 60) {
           lastPawX = mouseX;
           lastPawY = mouseY;
           const paw = document.createElement('span');
           paw.className = 'paw-print animate-pop-in';
           paw.textContent = '🐾';
-          paw.style.left = `${mouseX - 8}px`;
+          paw.style.left = `${mouseX}px`;
           paw.style.top = `${mouseY + 8}px`;
           pawLayer.appendChild(paw);
-          soundManager.playPop(380 + Math.min(300, (mouseX / rect.width) * 300));
+
+          // Keep DOM clean by capping paw prints
+          if (pawLayer.children.length > 30) {
+            pawLayer.removeChild(pawLayer.children[0]);
+          }
         }
 
-        // Check if reached finish carrot
+        // Check collision with waypoint carrots!
+        carrotEls.forEach((cEl) => {
+          if (cEl.dataset.eaten === 'true') return;
+          const cRect = cEl.getBoundingClientRect();
+          const cCenterX = cRect.left + cRect.width / 2;
+          const cCenterY = cRect.top + cRect.height / 2;
+          const d = Math.hypot(e.clientX - cCenterX, e.clientY - cCenterY);
+          if (d < 46) {
+            cEl.dataset.eaten = 'true';
+            cEl.classList.add('eaten');
+            eatenCarrots++;
+            this.score = eatenCarrots;
+
+            soundManager.playPop(520 + eatenCarrots * 60);
+            soundManager.playSparkle();
+
+            // Spawn floating chomp badge at carrot position
+            const badge = document.createElement('div');
+            badge.className = 'carrot-chomp-badge';
+            badge.textContent = '+1 Yum! 🥕';
+            badge.style.left = cEl.style.left;
+            badge.style.top = cEl.style.top;
+            container.appendChild(badge);
+            setTimeout(() => badge.remove(), 800);
+
+            bubble.textContent = `Crunch crunch! (${eatenCarrots}/${targetCarrots}) 🥕`;
+            const scoreEl = this.container.querySelector('#cursor-score');
+            if (scoreEl) scoreEl.textContent = `${eatenCarrots} / ${targetCarrots} 🥕`;
+
+            if (eatenCarrots >= targetCarrots) {
+              status.innerHTML = '🎉 All carrots collected! Head to the 🧺 <strong>PICNIC</strong> basket!';
+              status.className = 'path-status tracking-success';
+              endBtn.classList.add('animate-bounce');
+            } else {
+              status.innerHTML = `🥕 Yum! ${targetCarrots - eatenCarrots} carrot${targetCarrots - eatenCarrots > 1 ? 's' : ''} left!`;
+            }
+          }
+        });
+
+        // Check if reached finish picnic marker
         const endRect = endBtn.getBoundingClientRect();
-        if (
+        const reachedEnd = (
           e.clientX >= endRect.left - 20 &&
           e.clientX <= endRect.right + 20 &&
-          e.clientY >= endRect.top - 20 &&
-          e.clientY <= endRect.bottom + 20
-        ) {
-          completed = true;
-          isGuiding = false;
-          bunny.classList.remove('walking');
-          bunny.classList.add('hopping');
-          bubble.innerHTML = 'Crunch crunch! 🥕😋';
-          soundManager.playChimeSuccess();
-          soundManager.playSparkle();
+          e.clientY >= endRect.top - 25 &&
+          e.clientY <= endRect.bottom + 25
+        );
 
-          status.textContent = '🎉 Awesome job! Bunny got the carrot!';
-          status.className = 'path-status tracking-success';
-          this.score = 1;
-          const scoreEl = this.container.querySelector('#cursor-score');
-          if (scoreEl) scoreEl.textContent = '1 / 1';
+        if (reachedEnd) {
+          if (eatenCarrots >= targetCarrots) {
+            completed = true;
+            isGuiding = false;
+            bunny.classList.remove('walking');
+            bunny.classList.add('hopping');
+            bubble.innerHTML = 'Picnic feast time! 🧺🥕🎉';
+            soundManager.playChimeSuccess();
+            soundManager.playSparkle();
 
-          setTimeout(() => {
-            this.handleSuccess('Master trackpad path navigation! Bunny is full and happy!');
-          }, 700);
+            status.textContent = '🎉 Awesome job! Bunny got all carrots to the picnic!';
+            status.className = 'path-status tracking-success';
+
+            setTimeout(() => {
+              this.handleSuccess(`Master trackpad path navigation! Bunny gathered all ${targetCarrots} carrots!`);
+            }, 700);
+          } else {
+            bubble.textContent = "Don't forget the carrots! 🥕";
+            status.innerHTML = `🐰 Head back to collect all ${targetCarrots} carrots before the picnic!`;
+          }
         }
       } else {
         // Off the path!
         bunny.classList.add('off-track');
-        bubble.textContent = 'Oops! Stay on green road! 🌿';
+        bubble.textContent = 'Stay on the sunny road! 🌿';
         if (!offPathTimeout) {
           offPathTimeout = setTimeout(() => {
             if (isGuiding && !completed) {
               soundManager.playGentleOof();
-              status.textContent = '⚠️ Stay inside the sunny green path! Touch 🐰 Bunny to try again.';
+              status.textContent = '⚠️ Stay inside the sunny trail! Touch 🐰 Bunny to try again.';
               status.className = 'path-status tracking-failed';
               isGuiding = false;
               resetBunnyToStart();
+              resetCarrots();
             }
-          }, 800);
+          }, 1100);
         }
       }
     });
@@ -367,7 +518,8 @@ export class CursorGame {
         isGuiding = false;
         bunny.classList.remove('walking');
         resetBunnyToStart();
-        status.textContent = 'Oops! Touch 🐰 Bunny to try again.';
+        resetCarrots();
+        status.textContent = 'Left the trail area! Touch 🐰 Bunny to try again.';
         status.className = 'path-status tracking-failed';
         soundManager.playGentleOof();
       }
@@ -457,5 +609,8 @@ export class CursorGame {
 
   destroy() {
     if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+    if (this.difficultyHandler) {
+      window.removeEventListener('difficultychange', this.difficultyHandler);
+    }
   }
 }
